@@ -25,6 +25,21 @@ java -jar x-file-host-0.0.1-SNAPSHOT.jar
 # 后台启动
 nohup java -jar x-file-host-0.0.1-SNAPSHOT.jar > x-file-host.log 2>&1 &
 ```
+### 使用
+没有前端因为我前端菜..(欢迎提供前端页面),可以使用postman等工具调用
+当前的API接口:
+- 上传图片
+```http request
+POST /upload
+Content-Type: multipart/form-data
+
+file: file
+```
+返回文件名
+- 根据文件名获取图片
+```http request
+GET /image/{{filename}}}
+```
 ### 图床API配置教程
 1. 选择一个图床，注册账号，获取图床的api相关信息
 2. 在配置文件的`http-file-storage`属性下添加图床配置
@@ -48,6 +63,7 @@ nohup java -jar x-file-host-0.0.1-SNAPSHOT.jar > x-file-host.log 2>&1 &
       # 图床的上传图片api的返回结果中url地址的json路径
       resultJsonUrlPath: "data.image.url"
 ```
+
 ### 代办
 -[] 测试OSS、webdev等存储服务   
 -[] 测试本地储存服务   
