@@ -1,5 +1,6 @@
 package top.rui10038.xfilehost;
 
+import cn.hutool.core.io.FileUtil;
 import cn.hutool.http.HttpRequest;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -52,9 +53,13 @@ class XFileHostApplicationTests {
     @Test
     void hutoolHttp(){
         File file = new File("D:\\xiangmu\\x-file-host\\1.png");
-        String body = HttpRequest.post("https://smms.app/api/v2/upload")
+        String suffix = FileUtil.getSuffix(file);
+        File tempFile = FileUtil.newFile("./temp/23b0ffb44350003d394e74b9e1788ea32198497fc6a52258a701c8ff71d67ea5.png");
+        FileUtil.writeBytes(FileUtil.readBytes(file), tempFile);
+        String body = HttpRequest.post("http://api.tucang.cc/api/v1/upload")
                 .header("Authorization", "4DyxAZwXvbD2MidiYp5pC1D52dHalCbt")
-                .form("smfile", file)
+                .form("file", tempFile)
+                .form("token", "1720845003184358555229c5a4fa28ce6819e3d55f0d6")
                 .execute().body();
         System.out.println(body);
     }

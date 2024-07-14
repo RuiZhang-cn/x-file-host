@@ -17,4 +17,5 @@ public class XFileHostProperties {
     private boolean concurrent;
     private String notFindUrl = "https://github.com/RuiZhang-cn/x-file-host";
     private ImageProperties image = new ImageProperties();
+    private String accessDomain;
 }

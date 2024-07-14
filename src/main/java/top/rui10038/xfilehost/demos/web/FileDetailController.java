@@ -24,6 +24,7 @@ import top.rui10038.xfilehost.demos.config.properties.ValidationProperties;
 import top.rui10038.xfilehost.demos.config.properties.XFileHostProperties;
 import top.rui10038.xfilehost.demos.entity.Image;
 import top.rui10038.xfilehost.demos.pojo.ApiResponse;
+import top.rui10038.xfilehost.demos.pojo.UploadResVO;
 import top.rui10038.xfilehost.demos.pretreatment.FileUploadPretreatment;
 import top.rui10038.xfilehost.demos.service.ImageService;
 import top.rui10038.xfilehost.demos.storage.ImageUrlValidationUtil;
@@ -56,7 +57,7 @@ public class FileDetailController {
      * 上传文件
      */
     @PostMapping("/upload")
-    public ApiResponse<String> upload(MultipartFile file, HttpServletRequest request) throws IOException, NoSuchAlgorithmException {
+    public ApiResponse<UploadResVO> upload(MultipartFile file, HttpServletRequest request) throws IOException, NoSuchAlgorithmException {
         String xFileHostPropertiesToken = xFileHostProperties.getToken();
         if (StrUtil.isNotBlank(xFileHostPropertiesToken)) {
             String token = request.getHeader("x-file-host-token");
@@ -69,9 +70,25 @@ public class FileDetailController {
         InputStream inputStream = file.getInputStream();
         log.info("客户端上传文件:{}", originalFilename);
         String suffix = FileUtil.getSuffix(originalFilename);
-
         byte[] bytes = IoUtil.readBytes(inputStream);
-        File tempFile = FileUtil.createTempFile(suffix, true);
+        MessageDigestHashCalculator messageDigestHashCalculator = new MessageDigestHashCalculator(MessageDigest.getInstance(SHA256));
+        messageDigestHashCalculator.update(bytes);
+        String fileHashValue = messageDigestHashCalculator.getValue();
+        log.info("文件hash值:{}", fileHashValue);
+        final String fileNewName = fileHashValue + "." + suffix;
+
+        int count = imageService.count(
+                Wrappers.lambdaQuery(Image.class)
+                        .eq(Image::getFileName, fileNewName)
+                        .eq(Image::getStatus, 0)
+        );
+        if (count > 0) {
+            log.info("文件已存在,文件名:{}", fileNewName);
+            return ApiResponse.success(new UploadResVO(xFileHostProperties.getAccessDomain() + "/image/" + fileNewName, fileNewName));
+        }
+
+        File tempFile = FileUtil.newFile("temp-" + fileNewName);
+        tempFile.deleteOnExit();
         FileUtil.writeBytes(bytes, tempFile);
         CopyOnWriteArrayList<FileStorage> fileStorageList = fileStorageService.getFileStorageList();
         List<FileStorage> randomFileStorageList = RandomUtil.randomEleList(fileStorageList, xFileHostProperties.getBackupCount());
@@ -82,12 +99,7 @@ public class FileDetailController {
         if (log.isDebugEnabled()) {
             randomFileStorageList.stream().map(FileStorage::getPlatform).forEach(e -> log.debug("随机选择的fileStorage:{}", e));
         }
-        MessageDigestHashCalculator messageDigestHashCalculator = new MessageDigestHashCalculator(MessageDigest.getInstance(SHA256));
-        messageDigestHashCalculator.update(bytes);
-        String fileHashValue = messageDigestHashCalculator.getValue();
-        log.info("文件hash值:{}", fileHashValue);
 
-        final String fileNewName = fileHashValue + "." + suffix;
 
         Stream<FileStorage> stream = randomFileStorageList.stream();
         if (xFileHostProperties.isConcurrent()) {
@@ -126,11 +138,15 @@ public class FileDetailController {
         }).collect(Collectors.toList());
 
         tempFile.delete();
-        if (imageList.isEmpty()){
+        if (imageList.isEmpty()) {
             return ApiResponse.error("上传失败");
         }
         imageService.saveBatch(imageList);
-        return ApiResponse.success(fileNewName);
+        String accessDomain = xFileHostProperties.getAccessDomain();
+        if (StrUtil.isBlank(accessDomain)) {
+            accessDomain = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort();
+        }
+        return ApiResponse.success(new UploadResVO(accessDomain + "/image/" + fileNewName, fileNewName));
     }
 
     @GetMapping("/image/{filename}")
@@ -148,7 +164,7 @@ public class FileDetailController {
             if (validation.isEnable()) {
                 boolean b = ImageUrlValidationUtil.validationImageUrl(imageUrl, validation.getMethod());
                 if (b) {
-                    log.debug("图片源:{} 可用,返回给用户", imageUrl);
+                    log.debug("图片源:{} 可用,返回给用户,校验方式为:{}", imageUrl, validation.getMethod());
                     response.sendRedirect(imageUrl);
                     return;
                 }

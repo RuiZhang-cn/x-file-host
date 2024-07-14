@@ -27,6 +27,8 @@ dromara:
 #        storage-path: D:/Temp/ # 存储路径
 
 x-file-host:
+  # 配置访问域名 返回的url为：访问域名+/image/+文件名
+  access-domain: https://img.rui10038.top
   # 上传文件时需要的TOKEN 不填写则不需要token
   token:
   concurrent: true #是否开启并发上传
