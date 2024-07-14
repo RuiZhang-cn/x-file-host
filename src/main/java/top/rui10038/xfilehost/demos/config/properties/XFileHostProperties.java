@@ -11,7 +11,7 @@ import java.util.List;
 @Configuration
 @ConfigurationProperties(prefix = "x-file-host")
 public class XFileHostProperties {
-    private String token;
+    private String token = null;
     private List<HttpFileStorageConfig> httpFileStorage;
     private int backupCount;
     private boolean concurrent;

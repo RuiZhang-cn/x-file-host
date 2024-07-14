@@ -1,8 +1,10 @@
 package top.rui10038.xfilehost.demos.web;
 
+import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.io.IoUtil;
 import cn.hutool.core.util.RandomUtil;
+import cn.hutool.core.util.StrUtil;
 import cn.hutool.http.HttpRequest;
 import cn.hutool.http.HttpResponse;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
@@ -21,6 +23,7 @@ import org.springframework.web.multipart.MultipartFile;
 import top.rui10038.xfilehost.demos.config.properties.ValidationProperties;
 import top.rui10038.xfilehost.demos.config.properties.XFileHostProperties;
 import top.rui10038.xfilehost.demos.entity.Image;
+import top.rui10038.xfilehost.demos.pojo.ApiResponse;
 import top.rui10038.xfilehost.demos.pretreatment.FileUploadPretreatment;
 import top.rui10038.xfilehost.demos.service.ImageService;
 import top.rui10038.xfilehost.demos.storage.ImageUrlValidationUtil;
@@ -53,12 +56,13 @@ public class FileDetailController {
      * 上传文件
      */
     @PostMapping("/upload")
-    public String upload(MultipartFile file, HttpServletRequest request) throws IOException, NoSuchAlgorithmException {
+    public ApiResponse<String> upload(MultipartFile file, HttpServletRequest request) throws IOException, NoSuchAlgorithmException {
         String xFileHostPropertiesToken = xFileHostProperties.getToken();
-        if (xFileHostPropertiesToken != null){
+        if (StrUtil.isNotBlank(xFileHostPropertiesToken)) {
             String token = request.getHeader("x-file-host-token");
-            if (!xFileHostPropertiesToken.equals(token)){
-                return "token错误";
+            if (!xFileHostPropertiesToken.equals(token)) {
+                log.debug("token错误,请求token:{},配置token:{}", token, xFileHostPropertiesToken);
+                return ApiResponse.error("token错误");
             }
         }
         String originalFilename = file.getOriginalFilename();
@@ -67,10 +71,14 @@ public class FileDetailController {
         String suffix = FileUtil.getSuffix(originalFilename);
 
         byte[] bytes = IoUtil.readBytes(inputStream);
-        File tempFile = FileUtil.createTempFile(suffix,true);
+        File tempFile = FileUtil.createTempFile(suffix, true);
         FileUtil.writeBytes(bytes, tempFile);
         CopyOnWriteArrayList<FileStorage> fileStorageList = fileStorageService.getFileStorageList();
         List<FileStorage> randomFileStorageList = RandomUtil.randomEleList(fileStorageList, xFileHostProperties.getBackupCount());
+        if (CollectionUtil.isEmpty(randomFileStorageList)) {
+            log.error("没有可用的fileStorage");
+            return ApiResponse.error("没有可用的fileStorage");
+        }
         if (log.isDebugEnabled()) {
             randomFileStorageList.stream().map(FileStorage::getPlatform).forEach(e -> log.debug("随机选择的fileStorage:{}", e));
         }
@@ -118,8 +126,11 @@ public class FileDetailController {
         }).collect(Collectors.toList());
 
         tempFile.delete();
+        if (imageList.isEmpty()){
+            return ApiResponse.error("上传失败");
+        }
         imageService.saveBatch(imageList);
-        return fileNewName;
+        return ApiResponse.success(fileNewName);
     }
 
     @GetMapping("/image/{filename}")

@@ -32,10 +32,19 @@ nohup java -jar x-file-host-0.0.1-SNAPSHOT.jar > x-file-host.log 2>&1 &
 ```http request
 POST /upload
 Content-Type: multipart/form-data
+x-file-host-token: your token #未配置则不需要
 
 file: file
 ```
-返回文件名
+返回值样例:
+```json
+{
+  "success": true,
+  "message": "Success",
+  "data": "23b0ffb44350003d394e74b9e1788ea32198497fc6a52258a701c8ff71d67ea5.png", 
+  "timestamp": 1720954924474
+}
+```
 - 根据文件名获取图片
 ```http request
 GET /image/{{filename}}}
