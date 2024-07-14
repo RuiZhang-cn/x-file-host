@@ -1,0 +1,75 @@
+server:
+  port: 8080
+spring:
+  datasource:
+    url: jdbc:sqlite:identifier.sqlite
+    driver-class-name: org.sqlite.JDBC
+  servlet:
+    multipart:
+      #  最大文件上传大小
+      max-file-size: 10MB
+      max-request-size: 10MB
+logging:
+  level:
+    top.rui10038.xfilehost: debug
+dromara:
+  x-file-storage: #文件存储配置
+    default-platform: local-plus-1 #默认使用的存储平台
+    thumbnail-suffix: ".min.jpg" #缩略图后缀，例如【.min.jpg】【.png】
+    #对应平台的配置写在这里，注意缩进要对齐
+#    local-plus:
+#      - platform: local-plus-1 # 存储平台标识
+#        enable-storage: true  #启用存储
+#        enable-access: true #启用访问（线上请使用 Nginx 配置，效率更高）
+#        domain: http://127.0.0.1:8080/file/ # 访问域名，例如：“http://127.0.0.1:8030/file/”，注意后面要和 path-patterns 保持一致，“/”结尾，本地存储建议使用相对路径，方便后期更换域名
+#        base-path: local-plus/ # 基础路径
+#        path-patterns: /file/** # 访问路径
+#        storage-path: D:/Temp/ # 存储路径
+
+x-file-host:
+  # 上传文件时需要的TOKEN 不填写则不需要token
+  token:
+  concurrent: true #是否开启并发上传
+  backup-count: 3 #备份文件数量
+  #404图片地址,在找不到文件时返回
+  not-find-url: https://extensions.boostmyshop.com/media/catalog/product/cache/17/image/265x/9df78eab33525d08d6e5fb8d27136e95/b/o/boost-my-shop-404-url-for-magento_1.png
+  image:
+    validation:
+      #是否开启返回图片链接前验证
+      enable: true
+      # 图片有效性校验使用的方法，目前支持：HEAD,GET,OPTIONS
+      method: "HEAD"
+  http-file-storage:
+# 下面为示例配置 如果你正好用的下面的图床,填上你的api-key,把注释打开即可,欢迎提交各个图床的配置
+#    - platform: "picgo"
+#      url: "http://www.picgo.net/api/1/upload"
+#      method: "POST"
+#      headerMap:
+#        content-type: "multipart/form-data"
+#      argMap:
+#        key: "api-key"
+#      filename: "source"
+#      timeout: 5000
+#      resultJsonUrlPath: "image.url"
+#
+#    - platform: "imgbb"
+#      url: "https://api.imgbb.com/1/upload"
+#      method: "POST"
+#      arg-map:
+#        key: "api-key"
+#      filename: "image"
+#      timeout: 5000
+#      resultJsonUrlPath: "data.image.url"
+#
+#    - platform: "tucang"
+#      url: "http://api.tucang.cc/api/v1/upload"
+#      method: "POST"
+#      arg-map:
+#        token: "api-key"
+#      filename: "file"
+#      timeout: 5000
+#      resultJsonUrlPath: "data.url"
+
+management:
+  endpoints:
+    enabled-by-default: false
