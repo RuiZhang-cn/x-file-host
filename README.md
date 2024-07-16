@@ -41,6 +41,7 @@ file: file
 {
   "success": true,
   "message": "Success",
+  "url": "http://localhost:8080/image/23b0ffb44350003d394e74b9e1788ea32198497fc6a52258a701c8ff71d67ea5.png",
   "data": "23b0ffb44350003d394e74b9e1788ea32198497fc6a52258a701c8ff71d67ea5.png", 
   "timestamp": 1720954924474
 }
@@ -74,7 +75,7 @@ GET /image/{{filename}}}
 ```
 
 ### 代办
--[] 更好的校验图片是否云效方法 目前tucang不管图片是否存在都返回302
+-[] 更好的校验图片是否有效方法 目前tucang不管图片是否存在都返回302   
 -[] 测试OSS、webdev等存储服务   
 -[] 测试本地储存服务   
 -[] 定时任务检测图片可用性，少于指定值自动选择图床补传  

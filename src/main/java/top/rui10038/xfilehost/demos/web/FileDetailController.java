@@ -37,6 +37,7 @@ import java.io.InputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -157,19 +158,25 @@ public class FileDetailController {
                         .eq(Image::getStatus, 0)
         );
         log.info("用户请求图片:{},查找到{}个图片源", filename, list.size());
-        Collections.shuffle(list);
-        for (Image image : list) {
-            String imageUrl = image.getImageUrl();
-            ValidationProperties validation = xFileHostProperties.getImage().getValidation();
-            if (validation.isEnable()) {
-                boolean b = ImageUrlValidationUtil.validationImageUrl(imageUrl, validation.getMethod());
-                if (b) {
-                    log.debug("图片源:{} 可用,返回给用户,校验方式为:{}", imageUrl, validation.getMethod());
-                    response.sendRedirect(imageUrl);
-                    return;
-                }
-                log.debug("图片源:{}不可用", imageUrl);
-            }
+        Optional<String> first = list.parallelStream()
+                .map(image -> {
+                    String imageUrl = image.getImageUrl();
+                    ValidationProperties validation = xFileHostProperties.getImage().getValidation();
+                    if (validation.isEnable()) {
+                        boolean b = ImageUrlValidationUtil.validationImageUrl(imageUrl, validation.getMethod());
+                        if (b) {
+                            log.debug("图片源:{} 可用,返回给用户,校验方式为:{}", imageUrl, validation.getMethod());
+                            return imageUrl;
+                        }
+                        log.debug("图片源:{}不可用", imageUrl);
+                    }
+                    return null;
+                })
+                .filter(Objects::nonNull)
+                .findFirst();
+        if (first.isPresent()) {
+            response.sendRedirect(first.get());
+            return;
         }
         response.sendRedirect(xFileHostProperties.getNotFindUrl());
     }

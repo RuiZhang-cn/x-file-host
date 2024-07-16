@@ -32,7 +32,7 @@ x-file-host:
   # 上传文件时需要的TOKEN 不填写则不需要token
   token:
   concurrent: true #是否开启并发上传
-  backup-count: 3 #备份文件数量
+  backup-count: 3 #备份文件数量 同时上传的图床数
   #404图片地址,在找不到文件时返回
   not-find-url: https://extensions.boostmyshop.com/media/catalog/product/cache/17/image/265x/9df78eab33525d08d6e5fb8d27136e95/b/o/boost-my-shop-404-url-for-magento_1.png
   image:
