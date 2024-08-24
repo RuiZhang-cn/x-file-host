@@ -27,6 +27,17 @@ dromara:
 #        storage-path: D:/Temp/ # 存储路径
 
 x-file-host:
+  nsfw:
+    enable: false #是否开启NSFW检测
+    # 调用api进行检测，推荐 https://github.com/arnidan/nsfw-api
+    url:
+    resultJsonUrlPath: "porn"
+    filename: "image"
+    # 阈值，超过这个值则认为是nsfw图片
+    threshold: 0.5
+    timeout: 5000
+    # 当接口调用失败或者其他错误时，返回的默认值 默认报错 可选值：true,false,null(报错)
+    defaultValue: null
   # 配置访问域名 返回的url为：访问域名+/image/+文件名
   access-domain: https://img.rui10038.top
   # 上传文件时需要的TOKEN 不填写则不需要token

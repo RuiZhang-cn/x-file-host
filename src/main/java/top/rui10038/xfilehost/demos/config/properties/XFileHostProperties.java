@@ -18,4 +18,5 @@ public class XFileHostProperties {
     private String notFindUrl = "https://github.com/RuiZhang-cn/x-file-host";
     private ImageProperties image = new ImageProperties();
     private String accessDomain;
+    private NsfwProperties nsfw = new NsfwProperties();
 }

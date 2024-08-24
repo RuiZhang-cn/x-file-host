@@ -7,6 +7,7 @@ import cn.hutool.core.util.RandomUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.http.HttpRequest;
 import cn.hutool.http.HttpResponse;
+import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import lombok.extern.slf4j.Slf4j;
 import org.dromara.x.file.storage.core.FileInfo;
@@ -20,6 +21,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+import top.rui10038.xfilehost.demos.config.properties.NsfwProperties;
 import top.rui10038.xfilehost.demos.config.properties.ValidationProperties;
 import top.rui10038.xfilehost.demos.config.properties.XFileHostProperties;
 import top.rui10038.xfilehost.demos.entity.Image;
@@ -28,6 +30,7 @@ import top.rui10038.xfilehost.demos.pojo.UploadResVO;
 import top.rui10038.xfilehost.demos.pretreatment.FileUploadPretreatment;
 import top.rui10038.xfilehost.demos.service.ImageService;
 import top.rui10038.xfilehost.demos.storage.ImageUrlValidationUtil;
+import top.rui10038.xfilehost.demos.util.NsfwCheckUtil;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -91,6 +94,12 @@ public class FileDetailController {
         File tempFile = FileUtil.newFile("temp-" + fileNewName);
         tempFile.deleteOnExit();
         FileUtil.writeBytes(bytes, tempFile);
+        log.debug("开始nsfw检查");
+        boolean isNsfw = NsfwCheckUtil.isNsfw(xFileHostProperties.getNsfw(), tempFile);
+        if (isNsfw) {
+            log.info("文件:{}为nsfw文件,用户ip为:{},文件名为:{}", fileNewName, request.getRemoteAddr(), originalFilename);
+            return ApiResponse.error("文件内容违规，您的IP已被记录，请联系管理员反馈。");
+        }
         CopyOnWriteArrayList<FileStorage> fileStorageList = fileStorageService.getFileStorageList();
         List<FileStorage> randomFileStorageList = RandomUtil.randomEleList(fileStorageList, xFileHostProperties.getBackupCount());
         if (CollectionUtil.isEmpty(randomFileStorageList)) {
